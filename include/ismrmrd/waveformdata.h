@@ -18,17 +18,26 @@ namespace ISMRMRD {
 #endif
 
 /**
- *   A class for storing a dataset includig waveforms
+ *   A class for storing a dataset including waveforms
  *
  */
 	class WaveformData 
 {
-	det er en fejl
+	private://members
+		
+	private:
+		void init();
+
+	public:
+		WaveformData();
+
+		~WaveformData();
+
+
 
 };
 
 
 } /* ISMRMRD namespace */
-#endif
 
 #endif /* WAVEFORM_DATA_H */
