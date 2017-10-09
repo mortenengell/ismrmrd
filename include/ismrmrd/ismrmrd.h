@@ -262,6 +262,23 @@ typedef struct ISMRMRD_Acquisition {
     complex_float_t *data;
 } ISMRMRD_Acquisition;
 
+//-------------------------------
+typedef struct WaveformHeader
+{
+	uint64_t     time_stamp_ns;                   /**< Experiment time stamp in nano seconds */
+	uint32_t     dwell_time_ns;                   /**< Time between samples in nano seconds */
+	uint32_t     number_of_samples;               /**< Number of samples acquired */
+	int32_t      user_int[ISMRMRD_USER_INTS];     /**< Free user parameters */
+	float        user_float[ISMRMRD_USER_FLOATS]; /**< Free user parameters */
+}ISMRMRD_WaveformHeader;
+
+
+typedef struct ISMRMRD_Waveform {
+	ISMRMRD_AcquisitionHeader head; /**< later use the Waveform header for now just use the acq header */
+	float *traj;
+	complex_float_t *data;
+} ISMRMRD_Waveform;
+
 /** @addtogroup capi
  *  @{
  */
@@ -610,6 +627,13 @@ protected:
     ISMRMRD_Acquisition acq;
 };
 
+class EXPORTISMRMRD Waveform : public Acquisition {
+public:
+	Waveform();
+	~Waveform();
+
+};
+
 /// Header for MR Image type
 class EXPORTISMRMRD ImageHeader: public ISMRMRD_ImageHeader {
 public:
@@ -785,6 +809,8 @@ public:
 protected:
     ISMRMRD_Image im;
 };
+
+
 
 /// N-Dimensional array type
 template <typename T> class EXPORTISMRMRD NDArray {

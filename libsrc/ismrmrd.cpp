@@ -322,6 +322,19 @@ void Acquisition::setAllChannelsNotActive() {
     ismrmrd_set_all_channels_off(acq.head.channel_mask);
 }
 
+//
+// Waveform class Implementation
+//
+// Constructors, assignment operator, destructor
+Waveform::Waveform() : Acquisition() {
+	//should we just call the Acquistion constructor ?
+	//Acquisition::Acquisition()
+}
+
+Waveform::~Waveform()  {
+	//should we just call the Acquistion constructor ?
+	//Acquisition::Acquisition()
+}
 
 //
 // ImageHeader class Implementation
