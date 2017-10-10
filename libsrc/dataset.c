@@ -1169,6 +1169,105 @@ int ismrmrd_read_acquisition(const ISMRMRD_Dataset *dset, uint32_t index, ISMRMR
 
     return ISMRMRD_NOERROR;
 }
+//-----------------------------------------------
+
+uint32_t ismrmrd_get_number_of_waveform(const ISMRMRD_Dataset *dset) {
+	char *path;
+	uint32_t numacq;
+
+	if (dset == NULL) {
+		ISMRMRD_PUSH_ERR(ISMRMRD_RUNTIMEERROR, "Pointer should not be NULL.");
+		return 0;
+	}
+	/* The path to the acqusition data */
+	path = make_path(dset, "data");
+	numacq = get_number_of_elements(dset, path);
+	free(path);
+	return numacq;
+}
+
+int ismrmrd_append_waveform(const ISMRMRD_Dataset *dset, const ISMRMRD_Waveform *wav) {
+	int status;
+	char *path;
+	hid_t datatype;
+	HDF5_Acquisition hdf5acq[1];
+
+	if (dset == NULL) {
+		return ISMRMRD_PUSH_ERR(ISMRMRD_RUNTIMEERROR, "Dataset pointer should not be NULL.");
+	}
+	if (wav == NULL) {
+		return ISMRMRD_PUSH_ERR(ISMRMRD_RUNTIMEERROR, "Acquisition pointer should not be NULL.");
+	}
+
+	/* The path to the acqusition data */
+	path = make_path(dset, "data");
+
+	/* The acquisition datatype */
+	datatype = get_hdf5type_acquisition();
+
+	/* Create the HDF5 version of the acquisition */
+	hdf5acq[0].head = wav->head;
+	hdf5acq[0].data.len = 2 * acq->head.number_of_samples * acq->head.active_channels;
+	hdf5acq[0].data.p = acq->data;
+
+	/* Write it */
+	status = append_element(dset, path, hdf5acq, datatype, 0, NULL);
+	if (status != ISMRMRD_NOERROR) {
+		return ISMRMRD_PUSH_ERR(ISMRMRD_FILEERROR, "Failed to append acquisition.");
+	}
+
+	free(path);
+
+	/* Clean up */
+	status = H5Tclose(datatype);
+	if (status < 0) {
+		H5Ewalk2(H5E_DEFAULT, H5E_WALK_UPWARD, walk_hdf5_errors, NULL);
+		return ISMRMRD_PUSH_ERR(ISMRMRD_HDF5ERROR, "Failed to close datatype.");
+	}
+
+	return ISMRMRD_NOERROR;
+}
+
+int ismrmrd_read_waveform(const ISMRMRD_Dataset *dset, uint32_t index, ISMRMRD_Waveform *wav)
+{
+	hid_t datatype;
+	herr_t status;
+	HDF5_Acquisition hdf5acq;
+	char *path;
+
+	if (dset == NULL) {
+		return ISMRMRD_PUSH_ERR(ISMRMRD_RUNTIMEERROR, "Dataset pointer should not be NULL.");
+	}
+	if (acq == NULL) {
+		return ISMRMRD_PUSH_ERR(ISMRMRD_RUNTIMEERROR, "Acquisition pointer should not be NULL.");
+	}
+
+	/* The path to the acquisition data */
+	path = make_path(dset, "data");
+
+	/* The acquisition datatype */
+	datatype = get_hdf5type_acquisition();
+
+	status = read_element(dset, path, &hdf5acq, datatype, index);
+	memcpy(&acq->head, &hdf5acq.head, sizeof(ISMRMRD_AcquisitionHeader));
+	ismrmrd_make_consistent_acquisition(acq);
+	memcpy(acq->traj, hdf5acq.traj.p, ismrmrd_size_of_acquisition_traj(acq));
+	memcpy(acq->data, hdf5acq.data.p, ismrmrd_size_of_acquisition_data(acq));
+
+	/* clean up */
+	free(path);
+	free(hdf5acq.traj.p);
+	free(hdf5acq.data.p);
+
+	status = H5Tclose(datatype);
+	if (status < 0) {
+		H5Ewalk2(H5E_DEFAULT, H5E_WALK_UPWARD, walk_hdf5_errors, NULL);
+		return ISMRMRD_PUSH_ERR(ISMRMRD_HDF5ERROR, "Failed to close datatype.");
+	}
+
+	return ISMRMRD_NOERROR;
+}
+
 
 int ismrmrd_append_image(const ISMRMRD_Dataset *dset, const char *varname, const ISMRMRD_Image *im) {
     int status;

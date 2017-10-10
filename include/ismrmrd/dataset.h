@@ -155,6 +155,10 @@ public:
     void appendAcquisition(const Acquisition &acq);
     void readAcquisition(uint32_t index, Acquisition &acq);
     uint32_t getNumberOfAcquisitions();
+	// Waveforms
+	void appendWaveform(const Waveform &wav);
+	void readWaveform(uint32_t index, Waveform &wav);
+	uint32_t getNumberOfWaveforms();
     // Images
     template <typename T> void appendImage(const std::string &var, const Image<T> &im);
     void appendImage(const std::string &var, const ISMRMRD_Image *im);

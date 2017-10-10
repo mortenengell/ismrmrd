@@ -76,7 +76,32 @@ uint32_t Dataset::getNumberOfAcquisitions()
     uint32_t num = ismrmrd_get_number_of_acquisitions(&dset_);
     return num;
 }
+// Waveform
+void Dataset::appendWaveform(const Waveform &wav)
+{
+	//loop over ISMRMRD_Waveforms
+	for (int i = 0; i < wav.wav.size(); i++) {
+		int status = ismrmrd_append_waveform(&dset_, reinterpret_cast<const ISMRMRD_Waveform*>(&wav.wav[i]));
+		if (status != ISMRMRD_NOERROR) {
+			throw std::runtime_error(build_exception_string());
+		}
+	}
+}
 
+void Dataset::readWaveform(uint32_t index, Waveform &wav)
+{
+	int status = ismrmrd_read_waveform(&dset_, index, reinterpret_cast<ISMRMRD_Waveform*>(&wav));
+	if (status != ISMRMRD_NOERROR) {
+		throw std::runtime_error(build_exception_string());
+	}
+}
+
+
+uint32_t Dataset::getNumberOfWaveform()
+{
+	uint32_t num = ismrmrd_get_number_of_waveform(&dset_);
+	return num;
+}
 // Images
 template <typename T>void Dataset::appendImage(const std::string &var, const Image<T> &im)
 {
