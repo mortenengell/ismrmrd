@@ -33,10 +33,12 @@ typedef unsigned __int64 uint64_t;
 #else /* non MS C or C++ compiler */
 #include <stdint.h>
 #include <stddef.h>     /* for size_t */
+
 #endif /* _MSC_VER */
 
 /* Complex numbers */
 #ifdef __cplusplus
+
 #include <complex>
 typedef std::complex<float> complex_float_t;
 typedef std::complex<double> complex_double_t;
@@ -71,8 +73,9 @@ typedef int bool;
 /* Vectors */
 #ifdef __cplusplus
 #include <vector>
+#include <map>
 #endif /* __cplusplus */
-
+#include <vector>
 /* Exports needed for MS C++ */
 #include "ismrmrd/export.h"
 
@@ -272,11 +275,15 @@ typedef struct WaveformHeader
 	float        user_float[ISMRMRD_USER_FLOATS]; /**< Free user parameters */
 }ISMRMRD_WaveformHeader;
 
-
+typedef struct ISMRMRD_Extra_data {
+	uint32_t Period;
+	uint32_t Duration;
+};
 typedef struct ISMRMRD_Waveform {
 	ISMRMRD_AcquisitionHeader head; /**< later use the Waveform header for now just use the acq header */
 	float *traj;
-	complex_float_t *data;
+	std::map<uint32_t , std::vector<uint32_t> >  data;
+	std::map<uint32_t, ISMRMRD_Extra_data > extradata;
 } ISMRMRD_Waveform;
 
 /** @addtogroup capi
@@ -631,7 +638,9 @@ class EXPORTISMRMRD Waveform : public Acquisition {
 public:
 	Waveform();
 	~Waveform();
-
+public:
+	uint32_t hejsa;
+	std::vector<ISMRMRD_Waveform> wav;
 };
 
 /// Header for MR Image type
