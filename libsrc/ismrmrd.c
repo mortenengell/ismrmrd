@@ -180,6 +180,19 @@ size_t ismrmrd_size_of_acquisition_data(const ISMRMRD_Acquisition *acq) {
     return num_data * sizeof(*acq->data);
 
 }
+//TODO this may be key to the size?? but should be changed to accomodate the map - vector forat of data 
+size_t ismrmrd_size_of_waveform_data(const ISMRMRD_Acquisition *wav) {
+	int num_data;
+
+	if (wav == NULL) {
+		ISMRMRD_PUSH_ERR(ISMRMRD_RUNTIMEERROR, "Pointer should not NULL.");
+		return 0;
+	}
+
+	num_data = wav->head.number_of_samples * wav->head.active_channels;
+	return num_data * sizeof(*wav->data);
+
+}
 
 /* Image functions */
 int ismrmrd_init_image_header(ISMRMRD_ImageHeader *hdr) {

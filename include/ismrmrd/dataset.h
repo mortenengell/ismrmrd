@@ -83,6 +83,23 @@ EXPORTISMRMRD int ismrmrd_read_acquisition(const ISMRMRD_Dataset *dset, uint32_t
  */
 EXPORTISMRMRD uint32_t ismrmrd_get_number_of_acquisitions(const ISMRMRD_Dataset *dset);
 
+
+/**
+*  Appends and NMR/MRI Waveform to the dataset.
+*
+*  Please consult @See ISMRMRD_Acquisition struct for details.
+*/
+EXPORTISMRMRD int ismrmrd_append_waveform(const ISMRMRD_Dataset *dset, const ISMRMRD_Waveform *wav);
+
+/**
+*  Reads the acquisition with the specified index from the dataset.
+*/
+EXPORTISMRMRD int ismrmrd_read_waveform(const ISMRMRD_Dataset *dset, uint32_t index, ISMRMRD_Waveform *wav);
+
+/**
+*  Return the number of acquisitions in the dataset.
+*/
+EXPORTISMRMRD uint32_t ismrmrd_get_number_of_waveforms(const ISMRMRD_Dataset *dset);
 /**
  *  Appends an Image to the variable named varname in the dataset.
  *

@@ -97,9 +97,9 @@ void Dataset::readWaveform(uint32_t index, Waveform &wav)
 }
 
 
-uint32_t Dataset::getNumberOfWaveform()
+uint32_t Dataset::getNumberOfWaveforms()
 {
-	uint32_t num = ismrmrd_get_number_of_waveform(&dset_);
+	uint32_t num = ismrmrd_get_number_of_waveforms(&dset_);
 	return num;
 }
 // Images

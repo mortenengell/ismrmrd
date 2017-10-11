@@ -86,6 +86,9 @@ namespace ISMRMRD {
 extern "C" {
 #endif
 
+//helpers
+#include "mrdutil.h"
+
 /**
  * Constants
  */
@@ -268,11 +271,19 @@ typedef struct ISMRMRD_Acquisition {
 //-------------------------------
 typedef struct WaveformHeader
 {
-	uint64_t     time_stamp_ns;                   /**< Experiment time stamp in nano seconds */
-	uint32_t     dwell_time_ns;                   /**< Time between samples in nano seconds */
-	uint32_t     number_of_samples;               /**< Number of samples acquired */
-	int32_t      user_int[ISMRMRD_USER_INTS];     /**< Free user parameters */
-	float        user_float[ISMRMRD_USER_FLOATS]; /**< Free user parameters */
+	uint64_t    time_stamp_ns;								/**< Experiment time stamp in nano seconds */
+	uint32_t    dwell_time_ns;								/**< Time between samples in nano seconds */
+	uint32_t    number_of_samples;							/**< Number of samples acquired */
+	int32_t     user_int[ISMRMRD_USER_INTS];				/**< Free user parameters */
+	float       user_float[ISMRMRD_USER_FLOATS];			/**< Free user parameters */
+	uint32_t	measurement_uid;                            /**< Unique ID for the measurement */
+	uint32_t	scan_counter;                               /**< Current acquisition number in the measurement */
+	uint32_t	acquisition_time_stamp;                     /**< Acquisition clock */
+	uint32_t	physiology_time_stamp[ISMRMRD_PHYS_STAMPS];
+	uint16_t	available_channels;                         /**< Available coils */
+	uint16_t	discard_pre;                                /**< Samples to be discarded at the beginning of  acquisition */
+	uint16_t	discard_post;                               /**< Samples to be discarded at the end of acquisition */
+	uint16_t	center_sample;
 }ISMRMRD_WaveformHeader;
 
 typedef struct ISMRMRD_Extra_data {
@@ -280,12 +291,12 @@ typedef struct ISMRMRD_Extra_data {
 	uint32_t Duration;
 };
 typedef struct ISMRMRD_Waveform {
-	ISMRMRD_AcquisitionHeader head; /**< later use the Waveform header for now just use the acq header */
-	float *traj;
-	std::map<uint32_t , std::vector<uint32_t> >  data;
-	std::map<uint32_t, ISMRMRD_Extra_data > extradata;
-} ISMRMRD_Waveform;
-
+	ISMRMRD_WaveformHeader head; /**< later use the Waveform header for now just use the acq header */
+	uint32_t data_size;
+	std::map<uint32_t, std::vector<uint32_t> >  data;
+	std::map<uint32_t, ISMRMRD_Extra_data > extra_data;
+	std::map<uint32_t, uint32_t>  channel_info;
+};
 /** @addtogroup capi
  *  @{
  */
