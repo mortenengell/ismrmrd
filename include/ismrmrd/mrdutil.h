@@ -15,18 +15,33 @@
 ***********/
 //typedefs
 
-typedef std::map<uint32_t , std::vector<uint32_t> >		vector_map;
-typedef  vector_map::iterator							map_iterator;
 
 
+#ifdef __cplusplus
 
-uint32_t map_size(vector_map mymap){
-	uint32_t size = 0;
-	for (map_iterator it = mymap.begin(); it != mymap.end(); it++) {
-		size += sizeof(it->first);
-		size += (it->second).size() * sizeof(uint32_t);
+
+	template <typename T>
+	uint32_t map_size(std::map<uint32_t, std::vector<T> > mymap) {
+		uint32_t size = 0;
+
+		for (mymap::const_iterator it = mymap.begin(); it != mymap.end(); it++) {
+			size += sizeof(it->first);
+			size += (it->second).size() * sizeof(T);
+		}
+		return  size;
 	}
-	return  size;
-}
+	//overload for non vector version
+	template <typename T>
+	uint32_t map_size(std::map<uint32_t, T > mymap) {
+		uint32_t size = 0;
 
+		for (mymap::const_iterator it = mymap.begin(); it != mymap.end(); it++) {
+			size += sizeof(it->first);
+			size += sizeof(T);
+		}
+		return  size;
+	}
+
+
+#endif //__cplusplus
 #endif /*ISMRMRDUTILS*/

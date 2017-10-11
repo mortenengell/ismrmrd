@@ -81,13 +81,15 @@ typedef int bool;
 
 #pragma pack(push, 2) /* Use 2 byte alignment */
 
+//helpers
+#include "mrdutil.h"
+
 #ifdef __cplusplus
 namespace ISMRMRD {
 extern "C" {
 #endif
 
-//helpers
-#include "mrdutil.h"
+
 
 /**
  * Constants
@@ -280,6 +282,9 @@ typedef struct WaveformHeader
 	uint32_t	scan_counter;                               /**< Current acquisition number in the measurement */
 	uint32_t	acquisition_time_stamp;                     /**< Acquisition clock */
 	uint32_t	physiology_time_stamp[ISMRMRD_PHYS_STAMPS];
+	uint32_t    data_size;									/**< size of the datablock contained in the data map>*/
+	uint32_t	channel_size;								/**< size of the datablock contained in the channel map>*/
+	uint32_t	extra_data_size;							/**< size of the datablock containing the extra data>*/
 	uint16_t	available_channels;                         /**< Available coils */
 	uint16_t	discard_pre;                                /**< Samples to be discarded at the beginning of  acquisition */
 	uint16_t	discard_post;                               /**< Samples to be discarded at the end of acquisition */
@@ -292,7 +297,6 @@ typedef struct ISMRMRD_Extra_data {
 };
 typedef struct ISMRMRD_Waveform {
 	ISMRMRD_WaveformHeader head; /**< later use the Waveform header for now just use the acq header */
-	uint32_t data_size;
 	std::map<uint32_t, std::vector<uint32_t> >  data;
 	std::map<uint32_t, ISMRMRD_Extra_data > extra_data;
 	std::map<uint32_t, uint32_t>  channel_info;
@@ -650,7 +654,6 @@ public:
 	Waveform();
 	~Waveform();
 public:
-	uint32_t hejsa;
 	std::vector<ISMRMRD_Waveform> wav;
 };
 
