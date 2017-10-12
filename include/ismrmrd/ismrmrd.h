@@ -81,7 +81,7 @@ typedef int bool;
 
 #pragma pack(push, 2) /* Use 2 byte alignment */
 
-//helpers
+//helper functions 
 #include "mrdutil.h"
 
 #ifdef __cplusplus
@@ -313,6 +313,20 @@ EXPORTISMRMRD int ismrmrd_make_consistent_acquisition(ISMRMRD_Acquisition *acq);
 EXPORTISMRMRD size_t ismrmrd_size_of_acquisition_traj(const ISMRMRD_Acquisition *acq);
 EXPORTISMRMRD size_t ismrmrd_size_of_acquisition_data(const ISMRMRD_Acquisition *acq);
 /** @} */
+
+
+/*
+* waveform util functions for read and write
+*/
+
+EXPORTISMRMRD int ismrmrd_make_consistent_waveform(ISMRMRD_Waveform *wav);
+EXPORTISMRMRD size_t ismrmrd_size_of_waveform_channel(const ISMRMRD_Waveform *wav);
+EXPORTISMRMRD size_t ismrmrd_size_of_waveform_data(const ISMRMRD_Waveform *wav);
+EXPORTISMRMRD size_t ismrmrd_size_of_waveform_extra_data(const ISMRMRD_Waveform *wav);
+
+
+
+
 
 /**********/
 /* Images */

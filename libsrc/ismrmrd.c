@@ -180,8 +180,54 @@ size_t ismrmrd_size_of_acquisition_data(const ISMRMRD_Acquisition *acq) {
     return num_data * sizeof(*acq->data);
 
 }
-//TODO this may be key to the size?? but should be changed to accomodate the map - vector forat of data 
-size_t ismrmrd_size_of_waveform_data(const ISMRMRD_Acquisition *wav) {
+
+
+int ismrmrd_make_consistent_waveform(ISMRMRD_Waveform *wav) {
+
+	size_t channel_size, data_size , extra_data_size;
+
+	if (wav == NULL) {
+		return ISMRMRD_PUSH_ERR(ISMRMRD_RUNTIMEERROR, "Pointer should not NULL.");
+	}
+
+	/*if (wav->head.available_channels < wav->head.active_channels) {
+		wav->head.available_channels = wav->head.active_channels;
+	}*/
+
+	channel_size = ismrmrd_size_of_waveform_channel(wav);
+	if (channel_size > 0) {
+		//making space in memory isnt there a smarter way? 
+		std::map<uint32_t, uint32_t> *newPtr = (std::map<uint32_t, uint32_t> *)realloc((void*)&wav->channel_info, channel_size);
+		if (false) {// make up some smart way of checking this
+			return ISMRMRD_PUSH_ERR(ISMRMRD_MEMORYERROR,
+				"Failed to realloc waveform channel_info array");
+		}
+		wav->channel_info = *newPtr;
+	}
+
+	data_size = ismrmrd_size_of_waveform_data(wav);
+	if (data_size > 0) {
+		std::map<uint32_t, std::vector<uint32_t> >  *newPtr = (std::map<uint32_t, std::vector<uint32_t> >  *)realloc((void*)&wav->data, data_size);
+		if (newPtr == NULL) {
+			return ISMRMRD_PUSH_ERR(ISMRMRD_MEMORYERROR,
+				"Failed to realloc waveform data array");
+		}
+		wav->data = *newPtr;
+	}
+
+	extra_data_size = ismrmrd_size_of_waveform_extra_data(wav);
+	if (extra_data_size > 0) {
+		std::map<uint32_t, ISMRMRD_Extra_data > *newPtr = (std::map<uint32_t, ISMRMRD_Extra_data > *)realloc((void*)&wav->extra_data, extra_data_size);
+		if (newPtr == NULL) {
+			return ISMRMRD_PUSH_ERR(ISMRMRD_MEMORYERROR,
+				"Failed to realloc waveform extra_data array");
+		}
+		wav->extra_data = *newPtr;
+	}
+
+	return ISMRMRD_NOERROR;
+}
+size_t ismrmrd_size_of_waveform_data(const ISMRMRD_Waveform *wav) {
 	int num_data;
 
 	if (wav == NULL) {
@@ -189,11 +235,36 @@ size_t ismrmrd_size_of_waveform_data(const ISMRMRD_Acquisition *wav) {
 		return 0;
 	}
 
-	num_data = wav->head.number_of_samples * wav->head.active_channels;
-	return num_data * sizeof(*wav->data);
+	num_data = wav->head.number_of_samples * wav->head.data_size;
+	return num_data * sizeof(wav->data);
 
 }
 
+size_t ismrmrd_size_of_waveform_channel(const ISMRMRD_Waveform *wav) {
+	int num_data;
+
+	if (wav == NULL) {
+		ISMRMRD_PUSH_ERR(ISMRMRD_RUNTIMEERROR, "Pointer should not NULL.");
+		return 0;
+	}
+	//TODO what is the real size here and do we have header info on it?
+	num_data = wav->head.number_of_samples * wav->head.channel_size;
+	return num_data * sizeof(wav->channel_info);
+
+}
+
+size_t ismrmrd_size_of_waveform_extra_data(const ISMRMRD_Waveform *wav) {
+	int num_data;
+
+	if (wav == NULL) {
+		ISMRMRD_PUSH_ERR(ISMRMRD_RUNTIMEERROR, "Pointer should not NULL.");
+		return 0;
+	}
+	//TODO what is the real size here and do we have header info on it?
+	num_data = wav->head.number_of_samples * wav->head.extra_data_size;
+	return num_data * sizeof(wav->extra_data);
+
+}
 /* Image functions */
 int ismrmrd_init_image_header(ISMRMRD_ImageHeader *hdr) {
     if (hdr==NULL) {

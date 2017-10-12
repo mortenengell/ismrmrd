@@ -163,8 +163,8 @@ typedef struct HDF5_Waveform
 {
 	ISMRMRD_WaveformHeader head;
 	hvl_t data;
-	hvl_t channel_info;
 	hvl_t extra_data;
+	hvl_t channel_info;
 } HDF5_Waveform;
 
 static hid_t get_hdf5type_uint16(void) {
@@ -372,12 +372,6 @@ static hid_t get_hdf5type_waveform(void) {
 	H5Tclose(vartype);
 	vartype = get_hdf5type_uint32();
 	vlvartype = H5Tvlen_create(vartype);
-	h5status = H5Tinsert(datatype, "channel_info", HOFFSET(HDF5_Waveform, channel_info), vlvartype);
-	H5Tclose(vartype);
-	H5Tclose(vlvartype);
-	/* Store acquisition data as an array of floats */
-	vartype = get_hdf5type_uint32();
-	vlvartype = H5Tvlen_create(vartype);
 	h5status = H5Tinsert(datatype, "data", HOFFSET(HDF5_Waveform, data), vlvartype);
 	H5Tclose(vartype);
 	H5Tclose(vlvartype);
@@ -386,7 +380,11 @@ static hid_t get_hdf5type_waveform(void) {
 	h5status = H5Tinsert(datatype, "extra_data", HOFFSET(HDF5_Waveform, extra_data), vlvartype);
 	H5Tclose(vartype);
 	H5Tclose(vlvartype);
-
+	vartype = get_hdf5type_uint32();
+	vlvartype = H5Tvlen_create(vartype);
+	h5status = H5Tinsert(datatype, "channel_info", HOFFSET(HDF5_Waveform, channel_info), vlvartype);
+	H5Tclose(vartype);
+	H5Tclose(vlvartype);
 	if (h5status < 0) {
 		ISMRMRD_PUSH_ERR(ISMRMRD_FILEERROR, "Failed get acquisition data type");
 	}
@@ -1287,23 +1285,28 @@ int ismrmrd_read_waveform(const ISMRMRD_Dataset *dset, uint32_t index, ISMRMRD_W
 		return ISMRMRD_PUSH_ERR(ISMRMRD_RUNTIMEERROR, "Acquisition pointer should not be NULL.");
 	}
 
-	/* The path to the acquisition data */
+	/* The path to the waveform data */
 	path = make_path(dset, "data");
 
-	/* The acquisition datatype */
+	/* The waveform datatype */
 	datatype = get_hdf5type_waveform();
 
 	status = read_element(dset, path, &hdf5wav, datatype, index);
-	memcpy(&wav->head, &hdf5wav.head, sizeof(ISMRMRD_AcquisitionHeader));
+	memcpy(&wav->head, &hdf5wav.head, sizeof(ISMRMRD_WaveformHeader));
 	//must make a new func that takes a waveform here
-	//ismrmrd_make_consistent_acquisition(wav);
-
-	//memcpy(acq->traj, hdf5acq.traj.p, ismrmrd_size_of_acquisition_traj(acq));
+	ismrmrd_make_consistent_waveform(wav);
+	
+	
 	memcpy((void*)&wav->data, hdf5wav.data.p, hdf5wav.data.len);
-
+	memcpy((void*)&wav->data, hdf5wav.channel_info.p, hdf5wav.channel_info.len);
+	memcpy((void*)&wav->data, hdf5wav.extra_data.p, hdf5wav.extra_data.len);
+	
 	/* clean up */
 	free(path);
 	free(hdf5wav.data.p);
+	free(hdf5wav.channel_info.p);
+	free(hdf5wav.extra_data.p);
+	
 
 	status = H5Tclose(datatype);
 	if (status < 0) {
