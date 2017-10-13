@@ -180,7 +180,90 @@ size_t ismrmrd_size_of_acquisition_data(const ISMRMRD_Acquisition *acq) {
     return num_data * sizeof(*acq->data);
 
 }
+/*waveform stuff */
 
+int ismrmrd_init_waveform_header(ISMRMRD_WaveformHeader *hdr) {
+	if (hdr == NULL) {
+		return ISMRMRD_PUSH_ERR(ISMRMRD_RUNTIMEERROR, "Pointer should not be NULL.");
+	}
+	//TODO add the proper init for this type of header
+	memset(hdr, 0, sizeof(ISMRMRD_Waveform));
+	//hdr->version = ISMRMRD_VERSION_MAJOR;
+	hdr->number_of_samples = 0;
+	hdr->available_channels = 1;
+	//hdr->active_channels = 1;
+	return ISMRMRD_NOERROR;
+}
+
+int ismrmrd_init_waveform(ISMRMRD_Waveform *wav) {
+	if (wav == NULL) {
+		return ISMRMRD_PUSH_ERR(ISMRMRD_RUNTIMEERROR, "Pointer should not be NULL.");
+	}
+	//TODO NULL values wont do when we do not use pointers anymore
+	ismrmrd_init_waveform_header(&wav->head);
+	wav->channel_info.clear();
+	wav->data.clear();
+	wav->extra_data.clear();
+	return ISMRMRD_NOERROR;
+}
+
+int ismrmrd_cleanup_waveform(ISMRMRD_Waveform *wav) {
+	if (wav == NULL) {
+		return ISMRMRD_PUSH_ERR(ISMRMRD_RUNTIMEERROR, "Pointer should not be NULL.");
+	}
+	//TODO again fix to fit new datastructure  Deref?	
+	wav->data.clear(); 
+	wav->channel_info.clear();
+	return ISMRMRD_NOERROR;
+}
+
+ISMRMRD_Waveform* ismrmrd_create_waveform() {
+	ISMRMRD_Waveform *wav = (ISMRMRD_Waveform *)malloc(sizeof(ISMRMRD_Waveform));
+	if (wav == NULL) {
+		ISMRMRD_PUSH_ERR(ISMRMRD_MEMORYERROR, "Failed to malloc new ISMRMRD_Waveform.");
+		return NULL;
+	}
+	if (ismrmrd_init_waveform(wav) != ISMRMRD_NOERROR)
+	{
+		ISMRMRD_PUSH_ERR(ISMRMRD_RUNTIMEERROR, "Failed to initialize waveform.");
+		return NULL;
+	}
+	return wav;
+}
+
+int ismrmrd_free_waveform(ISMRMRD_Waveform *wav) {
+
+	if (wav == NULL) {
+		return ISMRMRD_PUSH_ERR(ISMRMRD_RUNTIMEERROR, "Pointer should not be NULL.");
+	}
+
+	if (ismrmrd_cleanup_waveform(wav) != ISMRMRD_NOERROR) {
+		return ISMRMRD_PUSH_ERR(ISMRMRD_RUNTIMEERROR, "Failed to cleanup waveform.");
+	}
+	free(wav);
+	return ISMRMRD_NOERROR;
+}
+
+int ismrmrd_copy_waveform(ISMRMRD_Waveform *wavdest, const ISMRMRD_Waveform *wavsource) {
+
+	if (wavsource == NULL) {
+		return ISMRMRD_PUSH_ERR(ISMRMRD_RUNTIMEERROR, "Source pointer should not NULL.");
+	}
+	if (wavdest == NULL) {
+		return ISMRMRD_PUSH_ERR(ISMRMRD_RUNTIMEERROR, "Destination pointer should not NULL.");
+	}
+
+	/* Copy the header */
+	memcpy(&wavdest->head, &wavsource->head, sizeof(ISMRMRD_AcquisitionHeader));
+	/* Reallocate memory for the trajectory and the data*/
+	ismrmrd_make_consistent_waveform(wavdest);
+	/* Copy the trajectory and the data */
+	//TODO fix the pointer issue probably by casting to some pointer
+	memcpy(&wavdest->channel_info, &wavsource->channel_info, ismrmrd_size_of_waveform_channel(wavsource));
+	memcpy(&wavdest->data, &wavsource->data, ismrmrd_size_of_waveform_data(wavsource));
+	memcpy(&wavdest->extra_data, &wavsource->extra_data, ismrmrd_size_of_waveform_extra_data(wavsource));
+	return ISMRMRD_NOERROR;
+}
 
 int ismrmrd_make_consistent_waveform(ISMRMRD_Waveform *wav) {
 
@@ -202,7 +285,7 @@ int ismrmrd_make_consistent_waveform(ISMRMRD_Waveform *wav) {
 			return ISMRMRD_PUSH_ERR(ISMRMRD_MEMORYERROR,
 				"Failed to realloc waveform channel_info array");
 		}
-		wav->channel_info = *newPtr;
+		wav->channel_info = newPtr;
 	}
 
 	data_size = ismrmrd_size_of_waveform_data(wav);
@@ -222,7 +305,7 @@ int ismrmrd_make_consistent_waveform(ISMRMRD_Waveform *wav) {
 			return ISMRMRD_PUSH_ERR(ISMRMRD_MEMORYERROR,
 				"Failed to realloc waveform extra_data array");
 		}
-		wav->extra_data = *newPtr;
+		wav->extra_data = newPtr;
 	}
 
 	return ISMRMRD_NOERROR;
@@ -244,7 +327,7 @@ size_t ismrmrd_size_of_waveform_channel(const ISMRMRD_Waveform *wav) {
 	int num_data;
 
 	if (wav == NULL) {
-		ISMRMRD_PUSH_ERR(ISMRMRD_RUNTIMEERROR, "Pointer should not NULL.");
+		ISMRMRD_PUSH_ERR(ISMRMRD_RUNTIMEERROR, "Pointer should not be NULL.");
 		return 0;
 	}
 	//TODO what is the real size here and do we have header info on it?
@@ -257,7 +340,7 @@ size_t ismrmrd_size_of_waveform_extra_data(const ISMRMRD_Waveform *wav) {
 	int num_data;
 
 	if (wav == NULL) {
-		ISMRMRD_PUSH_ERR(ISMRMRD_RUNTIMEERROR, "Pointer should not NULL.");
+		ISMRMRD_PUSH_ERR(ISMRMRD_RUNTIMEERROR, "Pointer should not be NULL.");
 		return 0;
 	}
 	//TODO what is the real size here and do we have header info on it?

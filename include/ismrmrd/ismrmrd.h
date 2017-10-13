@@ -296,7 +296,7 @@ typedef struct ISMRMRD_Extra_data {
 	uint32_t Duration;
 };
 typedef struct ISMRMRD_Waveform {
-	ISMRMRD_WaveformHeader head; /**< later use the Waveform header for now just use the acq header */
+	ISMRMRD_WaveformHeader head; 
 	std::map<uint32_t, std::vector<uint32_t> >  data;
 	std::map<uint32_t, ISMRMRD_Extra_data > extra_data;
 	std::map<uint32_t, uint32_t>  channel_info;
@@ -318,12 +318,16 @@ EXPORTISMRMRD size_t ismrmrd_size_of_acquisition_data(const ISMRMRD_Acquisition 
 /*
 * waveform util functions for read and write
 */
-
+EXPORTISMRMRD ISMRMRD_Waveform * ismrmrd_create_waveform();
+EXPORTISMRMRD int ismrmrd_free_waveform(ISMRMRD_Waveform *wav);
+EXPORTISMRMRD int ismrmrd_init_waveform(ISMRMRD_Waveform *wav);
+EXPORTISMRMRD int ismrmrd_cleanup_waveform(ISMRMRD_Waveform *wav);
+EXPORTISMRMRD int ismrmrd_copy_waveform(ISMRMRD_Waveform *wavdest, const ISMRMRD_Waveform *wavsource);
 EXPORTISMRMRD int ismrmrd_make_consistent_waveform(ISMRMRD_Waveform *wav);
 EXPORTISMRMRD size_t ismrmrd_size_of_waveform_channel(const ISMRMRD_Waveform *wav);
 EXPORTISMRMRD size_t ismrmrd_size_of_waveform_data(const ISMRMRD_Waveform *wav);
 EXPORTISMRMRD size_t ismrmrd_size_of_waveform_extra_data(const ISMRMRD_Waveform *wav);
-
+//add the other functionality as above i.e. free init cleanup create copy wav
 
 
 

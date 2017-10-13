@@ -1247,7 +1247,7 @@ int ismrmrd_append_waveform(const ISMRMRD_Dataset *dset, const ISMRMRD_Waveform 
 	/* Create the HDF5 version of the waveform */
 	hdf5wav[0].head = wav->head;
 	hdf5wav[0].data.len = wav->head.data_size;
-	hdf5wav[0].data.p = (void*)&(wav->data);//TODO type is wrong need to fix
+	hdf5wav[0].data.p = (void*)&(wav->data);
 	hdf5wav[0].channel_info.len = wav->head.channel_size;
 	hdf5wav[0].channel_info.p = (void*)&(wav->channel_info);
 	hdf5wav[0].extra_data.len = wav->head.extra_data_size;
@@ -1284,22 +1284,46 @@ int ismrmrd_read_waveform(const ISMRMRD_Dataset *dset, uint32_t index, ISMRMRD_W
 	if (wav == NULL) {
 		return ISMRMRD_PUSH_ERR(ISMRMRD_RUNTIMEERROR, "Acquisition pointer should not be NULL.");
 	}
+	// if called on an existing waveform this function overwrites it
+	wav->channel_info.clear();
+	wav->data.clear();
+	wav->extra_data.clear();
+	
 
 	/* The path to the waveform data */
 	path = make_path(dset, "data");
 
 	/* The waveform datatype */
-	datatype = get_hdf5type_waveform();
+	//datatype = get_hdf5type_waveform();
 
 	status = read_element(dset, path, &hdf5wav, datatype, index);
+	
 	memcpy(&wav->head, &hdf5wav.head, sizeof(ISMRMRD_WaveformHeader));
 	//must make a new func that takes a waveform here
-	ismrmrd_make_consistent_waveform(wav);
-	
-	
-	memcpy((void*)&wav->data, hdf5wav.data.p, hdf5wav.data.len);
-	memcpy((void*)&wav->data, hdf5wav.channel_info.p, hdf5wav.channel_info.len);
-	memcpy((void*)&wav->data, hdf5wav.extra_data.p, hdf5wav.extra_data.len);
+	//ismrmrd_make_consistent_waveform(wav);
+	uint32_t *channel_buf = new uint32_t[hdf5wav.channel_info.len / 4];
+	uint32_t *extra_buf = new uint32_t[hdf5wav.channel_info.len / 4];
+
+	//now we should have a copy of the channel info on the form :   std::map<uint32_t, uint32_t>
+	uint32_t offset = 0;
+	for (int i = 0; i < hdf5wav.channel_info.len / sizeof(uint32_t); i+=2) {
+		uint32_t id = channel_buf[i];
+		uint32_t length = channel_buf[i + 1];
+		//insert the data into the array of wav
+		std::vector<uint32_t > channel;
+		channel.reserve(length / 4);
+		memcpy((void*)&channel, &hdf5wav.data.p + offset , length);
+		wav->data[id] = channel;		
+		offset += length;
+	}
+
+	for (int i = 0; i < hdf5wav.channel_info.len / (2 * sizeof(uint32_t)); i++) {
+		uint32_t id = channel_buf[2 * i];
+		ISMRMRD_Extra_data extra;
+		memcpy((void*)&extra, &hdf5wav.extra_data.p + (i * sizeof(ISMRMRD_Extra_data)), sizeof(ISMRMRD_Extra_data));
+		wav->extra_data[id] = extra;
+	}
+
 	
 	/* clean up */
 	free(path);
